@@ -1,0 +1,696 @@
+
+<!-- ASCEND Performance Card -->
+<div class="ascend-card-container" data-player-id="{{ player.id }}">
+    <div class="ascend-card">
+        <div class="ascend-header">
+            <div class="ascend-title">
+                <span class="ascend-logo">🏆 ASCEND</span>
+                <span class="ascend-subtitle">Performance Card</span>
+            </div>
+            <div class="ascend-player-info">
+                <div class="player-avatar">
+                    <img src="{{ player.minecraft_skin_url }}" alt="{{ player.nickname }}" class="avatar-img">
+                </div>
+                <div class="player-details">
+                    <h4 class="player-name">{{ player.nickname }}</h4>
+                    <div class="player-stats">
+                        <span class="level-badge">⭐ Уровень {{ player.level }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ascend-modes">
+            <div class="mode-selector">
+                {% set current_mode = 'bed_wars' %}
+                <div class="mode-btn active" data-mode="bed_wars">
+                    🛏️ Bed Wars
+                </div>
+            </div>
+        </div>
+
+        <div class="ascend-content">
+            <div class="ratings-container" id="ratingsContainer">
+                <div class="loading-state" id="loadingState">
+                    <div class="loading-spinner"></div>
+                    <p>Загрузка рейтингов...</p>
+                </div>
+                
+                <div class="no-data-state" id="noDataState" style="display: none;">
+                    <div class="no-data-icon">📊</div>
+                    <h5>Нет данных для режима</h5>
+                    <p>Статистика для этого режима недоступна</p>
+                    {% if is_admin %}
+                    <button class="btn btn-warning btn-sm" onclick="createModeData()">
+                        <i class="fas fa-plus"></i> Создать данные режима
+                    </button>
+                    {% endif %}
+                </div>
+
+                <div class="ratings-grid" id="ratingsGrid" style="display: none;">
+                    <!-- Ratings will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        {% if is_admin %}
+        <div class="ascend-admin" id="adminPanel" style="display: none;">
+            <div class="admin-header">
+                <h6><i class="fas fa-user-shield"></i> Административная панель</h6>
+            </div>
+            <form class="admin-form" onsubmit="saveRatings(event)">
+                <div class="rating-inputs">
+                    <div class="rating-input-group">
+                        <label>K/D Рейтинг</label>
+                        <select name="kd_rating" class="form-select">
+                            <option value="F">F Tier</option>
+                            <option value="D">D Tier</option>
+                            <option value="C">C Tier</option>
+                            <option value="B">B Tier</option>
+                            <option value="A">A Tier</option>
+                            <option value="S">S Tier</option>
+                            <option value="S+">S+ Tier</option>
+                        </select>
+                    </div>
+                    <div class="rating-input-group">
+                        <label>Рейтинг убийств</label>
+                        <select name="kills_rating" class="form-select">
+                            <option value="F">F Tier</option>
+                            <option value="D">D Tier</option>
+                            <option value="C">C Tier</option>
+                            <option value="B">B Tier</option>
+                            <option value="A">A Tier</option>
+                            <option value="S">S Tier</option>
+                            <option value="S+">S+ Tier</option>
+                        </select>
+                    </div>
+                    <div class="rating-input-group">
+                        <label>Рейтинг целей</label>
+                        <select name="objective_rating" class="form-select">
+                            <option value="F">F Tier</option>
+                            <option value="D">D Tier</option>
+                            <option value="C">C Tier</option>
+                            <option value="B">B Tier</option>
+                            <option value="A">A Tier</option>
+                            <option value="S">S Tier</option>
+                            <option value="S+">S+ Tier</option>
+                        </select>
+                    </div>
+                    <div class="rating-input-group">
+                        <label>Эффективность</label>
+                        <select name="efficiency_rating" class="form-select">
+                            <option value="F">F Tier</option>
+                            <option value="D">D Tier</option>
+                            <option value="C">C Tier</option>
+                            <option value="B">B Tier</option>
+                            <option value="A">A Tier</option>
+                            <option value="S">S Tier</option>
+                            <option value="S+">S+ Tier</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="admin-notes">
+                    <label>Заметки администратора</label>
+                    <textarea name="admin_notes" rows="2" class="form-control" 
+                              placeholder="Дополнительные заметки..."></textarea>
+                </div>
+                <div class="admin-actions">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-save"></i> Сохранить оценки
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="autoCalculate()">
+                        <i class="fas fa-calculator"></i> Авто-расчет
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.ascend-card-container {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+.ascend-card {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(13, 202, 240, 0.1));
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.ascend-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b35, #f7931e, #ffc107, #28a745, #17a2b8, #6f42c1);
+    background-size: 300% 100%;
+    animation: ascendGradient 3s linear infinite;
+}
+
+@keyframes ascendGradient {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+.ascend-header {
+    padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ascend-title {
+    display: flex;
+    flex-direction: column;
+}
+
+.ascend-logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffc107;
+}
+
+.ascend-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.ascend-player-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.player-avatar .avatar-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 3px solid #ffc107;
+    image-rendering: pixelated;
+}
+
+.player-name {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.1rem;
+}
+
+.level-badge {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.ascend-modes {
+    padding: 1rem 1.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.mode-selector {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.mode-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-btn:hover, .mode-btn.active {
+    background: rgba(255, 193, 7, 0.3);
+    border-color: #ffc107;
+    color: #ffc107;
+}
+
+.ascend-content {
+    padding: 1.5rem;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 2rem;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(255, 193, 7, 0.3);
+    border-top: 4px solid #ffc107;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.no-data-state {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.no-data-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.ratings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.rating-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.rating-card:hover {
+    transform: translateY(-5px);
+    border-color: #ffc107;
+}
+
+.rating-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 0.5rem;
+}
+
+.rating-tier {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.rating-stats {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Tier colors */
+.tier-f { border-left: 4px solid #666; }
+.tier-f .rating-tier { color: #666; }
+
+.tier-d { border-left: 4px solid #dc3545; }
+.tier-d .rating-tier { color: #dc3545; }
+
+.tier-c { border-left: 4px solid #fd7e14; }
+.tier-c .rating-tier { color: #fd7e14; }
+
+.tier-b { border-left: 4px solid #ffc107; }
+.tier-b .rating-tier { color: #ffc107; }
+
+.tier-a { border-left: 4px solid #20c997; }
+.tier-a .rating-tier { color: #20c997; }
+
+.tier-s { border-left: 4px solid #0dcaf0; }
+.tier-s .rating-tier { color: #0dcaf0; }
+
+.tier-s-plus { border-left: 4px solid #6f42c1; }
+.tier-s-plus .rating-tier { color: #6f42c1; }
+
+.ascend-admin {
+    background: rgba(220, 53, 69, 0.1);
+    border-top: 1px solid rgba(220, 53, 69, 0.3);
+    padding: 1.5rem;
+}
+
+.admin-header h6 {
+    color: #dc3545;
+    margin-bottom: 1rem;
+}
+
+.rating-inputs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rating-input-group label {
+    display: block;
+    font-size: 0.85rem;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.admin-notes {
+    margin-bottom: 1rem;
+}
+
+.admin-notes label {
+    display: block;
+    font-size: 0.85rem;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .ascend-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .mode-selector {
+        justify-content: center;
+    }
+    
+    .ratings-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .rating-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .admin-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+class ASCENDCard {
+    constructor(playerId) {
+        this.playerId = playerId;
+        this.currentMode = 'bed_wars';
+        this.isLoading = false;
+        this.cache = new Map();
+        
+        this.init();
+    }
+    
+    init() {
+        this.loadRatings(this.currentMode);
+        this.bindEvents();
+    }
+    
+    bindEvents() {
+        // Mode switching
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const mode = btn.dataset.mode;
+                this.switchMode(mode);
+            });
+        });
+    }
+    
+    switchMode(mode) {
+        if (this.isLoading || mode === this.currentMode) return;
+        
+        this.currentMode = mode;
+        this.updateActiveMode();
+        this.loadRatings(mode);
+    }
+    
+    updateActiveMode() {
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === this.currentMode);
+        });
+    }
+    
+    async loadRatings(mode) {
+        this.showLoading();
+        
+        try {
+            // Check cache first
+            const cacheKey = `${this.playerId}-${mode}`;
+            if (this.cache.has(cacheKey)) {
+                const cachedData = this.cache.get(cacheKey);
+                this.displayRatings(cachedData);
+                return;
+            }
+            
+            const modeId = this.getModeId(mode);
+            const response = await fetch(`/api/player/${this.playerId}/rating/${modeId}`);
+            const data = await response.json();
+            
+            if (data.success && data.rating) {
+                this.cache.set(cacheKey, data.rating);
+                this.displayRatings(data.rating);
+                this.showAdminPanel();
+            } else {
+                this.showNoData();
+            }
+        } catch (error) {
+            console.error('Error loading ASCEND ratings:', error);
+            this.showNoData();
+        }
+    }
+    
+    displayRatings(rating) {
+        const grid = document.getElementById('ratingsGrid');
+        const ratings = [
+            {
+                label: 'K/D РЕЙТИНГ',
+                tier: rating.kd_rating,
+                stats: `${rating.mode_kd_ratio} K/D • ${rating.mode_kills} убийств`
+            },
+            {
+                label: 'РЕЙТИНГ УБИЙСТВ',
+                tier: rating.kills_rating,
+                stats: `${rating.mode_kills}+ убийств • Топ 15%`
+            },
+            {
+                label: 'РЕЙТИНГ ЦЕЛЕЙ',
+                tier: rating.objective_rating,
+                stats: `${rating.mode_objectives}+ целей • Топ 5%`
+            },
+            {
+                label: 'ЭФФЕКТИВНОСТЬ',
+                tier: rating.efficiency_rating,
+                stats: `${rating.mode_win_rate}% WR • ${rating.mode_wins} побед`
+            }
+        ];
+        
+        grid.innerHTML = ratings.map(r => `
+            <div class="rating-card tier-${r.tier.toLowerCase().replace('+', '-plus')}">
+                <div class="rating-label">${r.label}</div>
+                <div class="rating-tier">${r.tier}</div>
+                <div class="rating-stats">${r.stats}</div>
+            </div>
+        `).join('');
+        
+        // Add overall rating
+        grid.innerHTML += `
+            <div class="rating-card tier-${rating.overall_rating.toLowerCase().replace('+', '-plus')}" style="grid-column: 1 / -1;">
+                <div class="rating-label">ОБЩИЙ РЕЙТИНГ</div>
+                <div class="rating-tier">${rating.overall_rating}</div>
+                <div class="rating-stats">Отличный игрок • Топ 20%</div>
+            </div>
+        `;
+        
+        this.hideLoading();
+        this.showRatings();
+    }
+    
+    showLoading() {
+        this.isLoading = true;
+        document.getElementById('loadingState').style.display = 'block';
+        document.getElementById('noDataState').style.display = 'none';
+        document.getElementById('ratingsGrid').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'none';
+    }
+    
+    hideLoading() {
+        this.isLoading = false;
+        document.getElementById('loadingState').style.display = 'none';
+    }
+    
+    showRatings() {
+        document.getElementById('ratingsGrid').style.display = 'grid';
+    }
+    
+    showNoData() {
+        this.hideLoading();
+        document.getElementById('noDataState').style.display = 'block';
+        document.getElementById('ratingsGrid').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'none';
+    }
+    
+    showAdminPanel() {
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) {
+            adminPanel.style.display = 'block';
+        }
+    }
+    
+    getModeId(mode) {
+        const modeMap = {
+            'bed_wars': 1,
+            'sky_wars': 2,
+            'fireball_fight': 3,
+            'tnt_run': 4,
+            'duels': 5
+        };
+        return modeMap[mode] || 1;
+    }
+    
+    async createModeData() {
+        if (this.isLoading) return;
+        
+        if (!confirm(`Создать данные для режима ${this.getModeDisplayName(this.currentMode)}?`)) {
+            return;
+        }
+        
+        try {
+            const modeId = this.getModeId(this.currentMode);
+            const response = await fetch(`/api/player/${this.playerId}/rating/${modeId}/create`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                alert('Данные успешно созданы!');
+                this.clearCache();
+                this.loadRatings(this.currentMode);
+            } else {
+                alert('Ошибка при создании данных: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            console.error('Error creating mode data:', error);
+            alert('Произошла ошибка при создании данных.');
+        }
+    }
+    
+    async autoCalculate() {
+        if (this.isLoading) return;
+        
+        if (!confirm('Автоматически рассчитать рейтинги на основе статистики?')) {
+            return;
+        }
+        
+        try {
+            const modeId = this.getModeId(this.currentMode);
+            const response = await fetch(`/api/player/${this.playerId}/rating/${modeId}/auto-calculate`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            
+            if (data.success) {
+                this.clearCache();
+                this.loadRatings(this.currentMode);
+                alert('Рейтинги успешно пересчитаны!');
+            } else {
+                alert('Ошибка при расчете рейтингов');
+            }
+        } catch (error) {
+            console.error('Error auto calculating rating:', error);
+            alert('Произошла ошибка при расчете рейтингов.');
+        }
+    }
+    
+    async saveRatings(event) {
+        event.preventDefault();
+        
+        if (this.isLoading) return;
+        
+        const formData = new FormData(event.target);
+        formData.append('game_mode_id', this.getModeId(this.currentMode));
+        
+        try {
+            const response = await fetch(`/update-player-rating/${this.playerId}`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                this.clearCache();
+                this.loadRatings(this.currentMode);
+                alert('Рейтинги успешно сохранены!');
+            } else {
+                alert('Ошибка при сохранении рейтингов');
+            }
+        } catch (error) {
+            console.error('Error saving ratings:', error);
+            alert('Произошла ошибка при сохранении рейтингов.');
+        }
+    }
+    
+    getModeDisplayName(mode) {
+        const names = {
+            'bed_wars': 'Bed Wars',
+            'sky_wars': 'Sky Wars',
+            'fireball_fight': 'Fireball Fight',
+            'tnt_run': 'TNT Run',
+            'duels': 'Duels'
+        };
+        return names[mode] || mode;
+    }
+    
+    clearCache() {
+        this.cache.clear();
+    }
+}
+
+// Global functions for backward compatibility
+let ascendCard;
+
+function switchMode(mode) {
+    if (ascendCard) {
+        ascendCard.switchMode(mode);
+    }
+}
+
+function createModeData() {
+    if (ascendCard) {
+        ascendCard.createModeData();
+    }
+}
+
+function autoCalculate() {
+    if (ascendCard) {
+        ascendCard.autoCalculate();
+    }
+}
+
+function saveRatings(event) {
+    if (ascendCard) {
+        ascendCard.saveRatings(event);
+    }
+}
+
+// Initialize ASCEND card when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.ascend-card-container');
+    if (container) {
+        const playerId = container.dataset.playerId;
+        ascendCard = new ASCENDCard(playerId);
+    }
+});
+</script>

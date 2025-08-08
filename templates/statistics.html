@@ -1,0 +1,909 @@
+{% extends "base.html" %}
+
+{% block title %}Статистика - Minecraft Bedwars{% endblock %}
+
+{% block content %}
+<div class="statistics-page">
+    <!-- Header -->
+    <div class="stats-header text-center py-4 mb-5">
+        <h1 class="display-4 fw-bold text-warning mb-3">
+            <i class="fas fa-chart-bar me-3"></i>Статистика сервера
+        </h1>
+        <p class="lead text-muted">Детальная аналитика игроков Bedwars</p>
+    </div>
+
+    <!-- Overall Stats -->
+    {% if stats %}
+    <div class="overall-stats mb-5">
+        <h3 class="section-title mb-4">
+            <i class="fas fa-globe text-info me-2"></i>Общая статистика
+        </h3>
+        <div class="row g-4">
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="stat-box enhanced-stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-users text-primary"></i>
+                    </div>
+                    <div class="stat-value gradient-text">{{ stats.total_players }}</div>
+                    <div class="stat-label">Игроков</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="stat-box enhanced-stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-sword text-danger"></i>
+                    </div>
+                    <div class="stat-value gradient-text">{{ "{:,}".format(stats.total_kills) }}</div>
+                    <div class="stat-label">Киллов</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="stat-box enhanced-stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-skull text-secondary"></i>
+                    </div>
+                    <div class="stat-value gradient-text">{{ "{:,}".format(stats.total_deaths) }}</div>
+                    <div class="stat-label">Смертей</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="stat-box enhanced-stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-gamepad text-success"></i>
+                    </div>
+                    <div class="stat-value gradient-text">{{ "{:,}".format(stats.total_games) }}</div>
+                    <div class="stat-label">Игр</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="stat-box enhanced-stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-trophy text-warning"></i>
+                    </div>
+                    <div class="stat-value gradient-text">{{ "{:,}".format(stats.total_wins) }}</div>
+                    <div class="stat-label">Побед</div>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <div class="stat-box enhanced-stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-bed text-info"></i>
+                    </div>
+                    <div class="stat-value gradient-text">{{ stats.total_beds_broken }}</div>
+                    <div class="stat-label">Кроватей</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Economic Statistics -->
+        <div class="row g-4 mt-4">
+            <div class="col-12">
+                <h4 class="section-title mb-4">
+                    <i class="fas fa-coins text-warning me-2"></i>Экономическая статистика
+                </h4>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-coins text-warning"></i>
+                    </div>
+                    <div class="stat-value">{{ "{:,}".format(stats.total_coins) }}</div>
+                    <div class="stat-label">Всего койнов</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-star text-purple"></i>
+                    </div>
+                    <div class="stat-value">{{ "{:,}".format(stats.total_reputation) }}</div>
+                    <div class="stat-label">Всего репутации</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-chart-line text-success"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.average_coins }}</div>
+                    <div class="stat-label">Средние койны</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-medal text-info"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.average_reputation }}</div>
+                    <div class="stat-label">Средняя репутация</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Economic Players -->
+        {% if stats.richest_player or stats.most_reputable_player %}
+        <div class="row g-4 mt-4">
+            <div class="col-12">
+                <h4 class="section-title mb-4">
+                    <i class="fas fa-crown text-warning me-2"></i>Экономические лидеры
+                </h4>
+            </div>
+            {% if stats.richest_player %}
+            <div class="col-md-6">
+                <div class="stat-box text-center">
+                    <div class="stat-icon mx-auto mb-3">
+                        <i class="fas fa-money-bill-wave text-warning"></i>
+                    </div>
+                    <h5 class="text-warning">Самый богатый игрок</h5>
+                    <div class="stat-value">{{ stats.richest_player.nickname }}</div>
+                    <div class="stat-label">{{ "{:,}".format(stats.richest_player.coins) }} койнов</div>
+                </div>
+            </div>
+            {% endif %}
+            {% if stats.most_reputable_player %}
+            <div class="col-md-6">
+                <div class="stat-box text-center">
+                    <div class="stat-icon mx-auto mb-3">
+                        <i class="fas fa-gem text-purple"></i>
+                    </div>
+                    <h5 class="text-purple">Самый уважаемый игрок</h5>
+                    <div class="stat-value">{{ stats.most_reputable_player.nickname }}</div>
+                    <div class="stat-label">{{ "{:,}".format(stats.most_reputable_player.reputation) }} репутации</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Charts Section -->
+    <div class="charts-section mb-5">
+        <div class="row g-4">
+            <!-- Top Players by Experience -->
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-star text-warning me-2"></i>Топ по опыту
+                        </h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="experienceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Players by Kills -->
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-sword text-danger me-2"></i>Топ по киллам
+                        </h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="killsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Level Distribution -->
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-chart-pie text-success me-2"></i>Распределение уровней
+                        </h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="levelsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Comparison -->
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h4 class="chart-title">
+                            <i class="fas fa-chart-line text-info me-2"></i>Сравнение показателей
+                        </h4>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Lists -->
+    {% if top_players %}
+    <div class="top-lists-section">
+        <h3 class="section-title mb-4">
+            <i class="fas fa-medal text-warning me-2"></i>🏆 Топ игроки по категориям
+        </h3>
+        <div class="top-players-grid row g-4">
+            <!-- Top by Experience -->
+            <div class="col-xl-4 col-lg-6 col-md-6">
+                <div class="enhanced-top-list-card experience-category">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h5 class="category-title">По опыту</h5>
+                        <div class="category-gradient-line"></div>
+                    </div>
+                    <div class="players-container">
+                        {% for player in top_players.experience %}
+                        <div class="enhanced-player-item rank-{{ loop.index }} {% if loop.index <= 3 %}medal-rank{% endif %}">
+                            <div class="rank-indicator">
+                                <span class="rank-number">{{ loop.index }}</span>
+                                {% if loop.index == 1 %}
+                                <div class="medal gold-medal">🥇</div>
+                                {% elif loop.index == 2 %}
+                                <div class="medal silver-medal">🥈</div>
+                                {% elif loop.index == 3 %}
+                                <div class="medal bronze-medal">🥉</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="player-avatar-mini">
+                                <img src="{{ player.minecraft_skin_url }}" 
+                                     alt="{{ player.nickname }}" 
+                                     class="mini-avatar"
+                                     onerror="this.src='https://mc-heads.net/avatar/steve/32'">
+                            </div>
+                            
+                            <div class="player-info">
+                                <a href="{{ url_for('player_profile', player_id=player.id) }}" class="player-name-enhanced">
+                                    {% if player.leaderboard_use_gradient and player.can_use_leaderboard_gradients %}
+                                    <span class="gradient-name" 
+                                          style="background: linear-gradient(45deg, {{ player.leaderboard_gradient_start }}, {{ player.leaderboard_gradient_end }}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; background-size: 200% 200%;">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% else %}
+                                    <span class="regular-name" style="color: {{ player.leaderboard_name_color }};">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            
+                            <div class="player-stat-value experience-stat">
+                                <span class="stat-number">{{ "{:,}".format(player.experience) }}</span>
+                                <span class="stat-unit">XP</span>
+                            </div>
+                            
+                            <div class="hover-glow-effect"></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top by Kills -->
+            <div class="col-xl-4 col-lg-6 col-md-6">
+                <div class="enhanced-top-list-card kills-category">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-sword"></i>
+                        </div>
+                        <h5 class="category-title">По киллам</h5>
+                        <div class="category-gradient-line"></div>
+                    </div>
+                    <div class="players-container">
+                        {% for player in top_players.kills %}
+                        <div class="enhanced-player-item rank-{{ loop.index }} {% if loop.index <= 3 %}medal-rank{% endif %}">
+                            <div class="rank-indicator">
+                                <span class="rank-number">{{ loop.index }}</span>
+                                {% if loop.index == 1 %}
+                                <div class="medal gold-medal">🥇</div>
+                                {% elif loop.index == 2 %}
+                                <div class="medal silver-medal">🥈</div>
+                                {% elif loop.index == 3 %}
+                                <div class="medal bronze-medal">🥉</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="player-avatar-mini">
+                                <img src="{{ player.minecraft_skin_url }}" 
+                                     alt="{{ player.nickname }}" 
+                                     class="mini-avatar"
+                                     onerror="this.src='https://mc-heads.net/avatar/steve/32'">
+                            </div>
+                            
+                            <div class="player-info">
+                                <a href="{{ url_for('player_profile', player_id=player.id) }}" class="player-name-enhanced">
+                                    {% if player.leaderboard_use_gradient and player.can_use_leaderboard_gradients %}
+                                    <span class="gradient-name" 
+                                          style="background: linear-gradient(45deg, {{ player.leaderboard_gradient_start }}, {{ player.leaderboard_gradient_end }}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; background-size: 200% 200%;">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% else %}
+                                    <span class="regular-name" style="color: {{ player.leaderboard_name_color }};">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            
+                            <div class="player-stat-value kills-stat">
+                                <span class="stat-number">{{ "{:,}".format(player.kills) }}</span>
+                                <span class="stat-unit">⚔️</span>
+                            </div>
+                            
+                            <div class="hover-glow-effect"></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top by Beds Broken -->
+            <div class="col-xl-4 col-lg-6 col-md-6">
+                <div class="enhanced-top-list-card beds-category">
+                    <div class="category-header">
+                        <div class="category-icon">
+                            <i class="fas fa-bed"></i>
+                        </div>
+                        <h5 class="category-title">По кроватям</h5>
+                        <div class="category-gradient-line"></div>
+                    </div>
+                    <div class="players-container">
+                        {% for player in top_players.beds_broken %}
+                        <div class="enhanced-player-item rank-{{ loop.index }} {% if loop.index <= 3 %}medal-rank{% endif %}">
+                            <div class="rank-indicator">
+                                <span class="rank-number">{{ loop.index }}</span>
+                                {% if loop.index == 1 %}
+                                <div class="medal gold-medal">🥇</div>
+                                {% elif loop.index == 2 %}
+                                <div class="medal silver-medal">🥈</div>
+                                {% elif loop.index == 3 %}
+                                <div class="medal bronze-medal">🥉</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="player-avatar-mini">
+                                <img src="{{ player.minecraft_skin_url }}" 
+                                     alt="{{ player.nickname }}" 
+                                     class="mini-avatar"
+                                     onerror="this.src='https://mc-heads.net/avatar/steve/32'">
+                            </div>
+                            
+                            <div class="player-info">
+                                <a href="{{ url_for('player_profile', player_id=player.id) }}" class="player-name-enhanced">
+                                    {% if player.leaderboard_use_gradient and player.can_use_leaderboard_gradients %}
+                                    <span class="gradient-name" 
+                                          style="background: linear-gradient(45deg, {{ player.leaderboard_gradient_start }}, {{ player.leaderboard_gradient_end }}); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; background-size: 200% 200%;">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% else %}
+                                    <span class="regular-name" style="color: {{ player.leaderboard_name_color }};">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% endif %}
+                                </a>
+                            </div>
+                            
+                            <div class="player-stat-value beds-stat">
+                                <span class="stat-number">{{ "{:,}".format(player.beds_broken) }}</span>
+                                <span class="stat-unit">🛏️</span>
+                            </div>
+                            
+                            <div class="hover-glow-effect"></div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back to Leaderboard -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-arrow-left me-2"></i>Назад к таблице лидеров
+        </a>
+        {% if is_admin %}
+        <a href="{{ url_for('admin') }}" class="btn btn-warning btn-lg ms-2">
+            <i class="fas fa-cog me-2"></i>Панель администратора
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load statistics data
+fetch('{{ url_for("api_stats") }}')
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error('Error loading statistics:', data.error);
+            return;
+        }
+
+        createCharts(data.charts);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+function createCharts(chartData) {
+    // Experience Chart
+    const expCtx = document.getElementById('experienceChart').getContext('2d');
+    new Chart(expCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.top_players_exp.labels,
+            datasets: [{
+                label: 'Опыт',
+                data: chartData.top_players_exp.data,
+                backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                borderColor: 'rgba(255, 193, 7, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#fff' }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#6c757d' },
+                    grid: { color: '#495057' }
+                },
+                x: {
+                    ticks: { color: '#6c757d' },
+                    grid: { color: '#495057' }
+                }
+            }
+        }
+    });
+
+    // Kills Chart
+    const killsCtx = document.getElementById('killsChart').getContext('2d');
+    new Chart(killsCtx, {
+        type: 'bar',
+        data: {
+            labels: chartData.top_players_kills.labels,
+            datasets: [{
+                label: 'Киллы',
+                data: chartData.top_players_kills.data,
+                backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                borderColor: 'rgba(220, 53, 69, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#fff' }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#6c757d' },
+                    grid: { color: '#495057' }
+                },
+                x: {
+                    ticks: { color: '#6c757d' },
+                    grid: { color: '#495057' }
+                }
+            }
+        }
+    });
+
+    // Levels Distribution Chart
+    const levelsCtx = document.getElementById('levelsChart').getContext('2d');
+    const levelLabels = Object.keys(chartData.player_levels);
+    const levelData = Object.values(chartData.player_levels);
+
+    new Chart(levelsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: levelLabels,
+            datasets: [{
+                data: levelData,
+                backgroundColor: [
+                    'rgba(255, 193, 7, 0.8)',
+                    'rgba(40, 167, 69, 0.8)',
+                    'rgba(23, 162, 184, 0.8)',
+                    'rgba(220, 53, 69, 0.8)',
+                    'rgba(108, 117, 125, 0.8)',
+                    'rgba(102, 16, 242, 0.8)'
+                ],
+                borderWidth: 2,
+                borderColor: '#343a40'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#fff' }
+                }
+            }
+        }
+    });
+
+    // Performance Comparison Chart
+    const perfCtx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(perfCtx, {
+        type: 'line',
+        data: {
+            labels: chartData.top_players_exp.labels.slice(0, 5),
+            datasets: [
+                {
+                    label: 'Опыт (÷100)',
+                    data: chartData.top_players_exp.data.slice(0, 5).map(x => x / 100),
+                    borderColor: 'rgba(255, 193, 7, 1)',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: 'Киллы',
+                    data: chartData.top_players_kills.data.slice(0, 5),
+                    borderColor: 'rgba(220, 53, 69, 1)',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: { color: '#fff' }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { color: '#6c757d' },
+                    grid: { color: '#495057' }
+                },
+                x: {
+                    ticks: { color: '#6c757d' },
+                    grid: { color: '#495057' }
+                }
+            }
+        }
+    });
+}
+
+// Animate stat boxes
+document.querySelectorAll('.stat-box, .chart-card, .top-list-card').forEach((element, index) => {
+    setTimeout(() => {
+        element.style.animation = 'fadeInUp 0.6s ease';
+    }, index * 100);
+});
+</script>
+{% endblock %}
+
+/* Enhanced Top Players Styles */
+.top-lists-section .section-title {
+    background: linear-gradient(45deg, #ffd700, #ffaa00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 2rem !important;
+}
+
+.top-list-card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,193,7,0.3);
+    border-radius: 15px;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.4s ease;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+}
+
+.top-list-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(255,193,7,0.6);
+    box-shadow: 0 15px 35px rgba(255,193,7,0.2);
+}
+
+.top-list-header {
+    background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,140,0,0.2));
+    padding: 1rem;
+    border-bottom: 2px solid rgba(255,193,7,0.3);
+}
+
+.top-list-header h5 {
+    margin: 0;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.top-list-body {
+    padding: 1rem;
+}
+
+.top-list-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+}
+
+.top-list-item:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateX(5px);
+}
+
+.top-list-item.rank-1 {
+    border-left-color: #ffd700;
+    background: linear-gradient(90deg, rgba(255,215,0,0.1), transparent);
+}
+
+.top-list-item.rank-2 {
+    border-left-color: #c0c0c0;
+    background: linear-gradient(90deg, rgba(192,192,192,0.1), transparent);
+}
+
+.top-list-item.rank-3 {
+    border-left-color: #cd7f32;
+    background: linear-gradient(90deg, rgba(205,127,50,0.1), transparent);
+}
+
+.top-list-item .rank {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, rgba(255,193,7,0.2), rgba(255,140,0,0.2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-right: 1rem;
+    border: 2px solid rgba(255,193,7,0.3);
+}
+
+.top-list-item.rank-1 .rank {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+    font-size: 1.2rem;
+}
+
+.top-list-item.rank-2 .rank {
+    background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+    color: #000;
+    font-size: 1.2rem;
+}
+
+.top-list-item.rank-3 .rank {
+    background: linear-gradient(135deg, #cd7f32, #b8691f);
+    color: #fff;
+    font-size: 1.2rem;
+}
+
+.player-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.player-name {
+    font-weight: 600;
+    color: #fff;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-stat {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.level-badge, .kd-badge, .win-rate-badge {
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    white-space: nowrap;
+}
+
+.level-badge {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+.kd-badge.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+.kd-badge.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+    color: #000 !important;
+}
+
+.kd-badge.bg-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+}
+
+.win-rate-badge.bg-success {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+.win-rate-badge.bg-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+    color: #000 !important;
+}
+
+.win-rate-badge.bg-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+}
+
+/* Animation for top lists */
+.top-list-item {
+    opacity: 0;
+    animation: slideInUp 0.6s ease forwards;
+}
+
+.top-list-item:nth-child(1) { animation-delay: 0.1s; }
+.top-list-item:nth-child(2) { animation-delay: 0.2s; }
+.top-list-item:nth-child(3) { animation-delay: 0.3s; }
+.top-list-item:nth-child(4) { animation-delay: 0.4s; }
+.top-list-item:nth-child(5) { animation-delay: 0.5s; }
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .top-list-item {
+        padding: 0.5rem;
+    }
+
+    .top-list-item .rank {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+        margin-right: 0.75rem;
+    }
+
+    .player-name {
+        font-size: 0.9rem;
+    }
+
+    .player-stat {
+        font-size: 0.8rem;
+    }
+
+    .level-badge, .kd-badge, .win-rate-badge {
+        padding: 0.2rem 0.6rem;
+        font-size: 0.7rem;
+    }
+}
+
+/* Specific styles for top player elements */
+.top-player-rank {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-right: 10px;
+    color: #fff;
+    border: 2px solid transparent;
+}
+
+.top-player-rank.rank-1 {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+    font-size: 1.2rem;
+    border-color: #ffd700;
+}
+
+.top-player-rank.rank-2 {
+    background: linear-gradient(135deg, #c0c0c0, #a0a0a0);
+    color: #000;
+    font-size: 1.2rem;
+    border-color: #c0c0c0;
+}
+
+.top-player-rank.rank-3 {
+    background: linear-gradient(135deg, #cd7f32, #b8691f);
+    color: #fff;
+    font-size: 1.2rem;
+    border-color: #cd7f32;
+}
+
+.top-player-rank.rank-other {
+    background-color: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.top-player-name {
+    font-weight: 600;
+    color: #fff;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.top-player-name:hover {
+    color: #ffd700;
+}
+
+.top-player-stat {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #fff;
+    margin-left: 10px;
+}
+
+.top-player-stat {
+    color: #ffc107; /* Default to warning color */
+}
+
+.top-list-item .top-player-stat {
+    color: #ffc107; /* Default to warning color */
+}
+
+.top-list-item.rank-1 .top-player-stat,
+.top-list-item.rank-2 .top-player-stat,
+.top-list-item.rank-3 .top-player-stat {
+    color: #fff; /* White for top ranks */
+}
+
+.top-list-item.rank-1 .top-player-stat { color: #ffd700; } /* Gold for rank 1 */
+.top-list-item.rank-2 .top-player-stat { color: #c0c0c0; } /* Silver for rank 2 */
+.top-list-item.rank-3 .top-player-stat { color: #cd7f32; } /* Bronze for rank 3 */
+
+/* Styling for player name with gradient */
+.player-name-gradient {
+    display: inline-block;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    background-size: 200% 200%;
+}
+
+.gradient-animated {
+    animation: gradientShift 5s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}

@@ -1,0 +1,649 @@
+{% extends "base.html" %}
+{% block title %}{{ 'role_management'|t }} - {{ 'admin_panel'|t }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-primary">
+                    <i class="fas fa-user-tag me-2"></i>
+                    {{ 'role_management'|t }}
+                </h2>
+                <a href="{{ url_for('admin') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>{{ 'back'|t }}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Role Form -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card bg-dark border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        {{ 'create_role'|t }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_create_role') }}" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="role_name" class="form-label required">{{ 'role_name'|t }}</label>
+                            <input type="text" class="form-control bg-secondary text-light border-0" 
+                                   id="role_name" name="role_name" required maxlength="100"
+                                   placeholder="{{ 'enter_role_name'|t }}">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="role_color" class="form-label">{{ 'role_color'|t }}</label>
+                                    <input type="color" class="form-control form-control-color bg-secondary border-0" 
+                                           id="role_color" name="role_color" value="#ffd700">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="role_gradient" name="role_gradient">
+                                    <label class="form-check-label text-light" for="role_gradient">
+                                        {{ 'use_gradient'|t }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="gradient_settings" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="role_gradient_end" class="form-label">{{ 'gradient_end_color'|t }}</label>
+                                    <input type="color" class="form-control form-control-color bg-secondary border-0" 
+                                           id="role_gradient_end" name="role_gradient_end" value="#ff6b35">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="role_gradient_animated" name="role_gradient_animated">
+                                        <label class="form-check-label text-light" for="role_gradient_animated">
+                                            Анимированный градиент
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <label class="form-label">Предпросмотр градиента</label>
+                                <div id="gradient_preview" class="gradient-preview-box">
+                                    Пример роли
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Updated emoji input section -->
+                        <div class="mb-3">
+                            <label class="form-label">{{ 'role_emoji'|t }}</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-secondary border-0 text-light"><i class="fas fa-smile"></i></span>
+                                <input type="text" class="form-control bg-secondary text-light border-0" 
+                                       id="role_emoji" name="role_emoji" placeholder="{{ 'enter_emoji_text'|t }}" maxlength="10">
+                            </div>
+                            <small class="form-text text-muted">{{ 'use_text_emoji'|t }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ 'role_emoji_class'|t }} (Font Awesome)</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text bg-secondary border-0 text-light"><i class="fas fa-icons"></i></span>
+                                <input type="text" class="form-control bg-secondary text-light border-0" 
+                                       id="role_emoji_class" name="role_emoji_class" placeholder="fas fa-crown">
+                            </div>
+                             <small class="form-text text-muted">{{ 'use_font_awesome_emoji'|t }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="emoji_file" class="form-label">{{ 'role_emoji'|t }} (Upload File)</label>
+                            <input type="file" class="form-control bg-secondary text-light border-0" 
+                                   id="emoji_file" name="emoji_file" accept=".png,.svg,.webp,.gif"
+                                   onchange="previewEmoji(this)">
+                             <img id="emojiPreview" src="#" alt="Emoji preview" class="emoji-preview" style="display:none; margin-top: 10px;">
+                            <small class="form-text text-muted">{{ 'supported_formats_and_size'|t }}</small>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="role_visible" name="role_visible" checked>
+                                <label class="form-check-label text-light" for="role_visible">
+                                    {{ 'visible_in_profile'|t }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>{{ 'create_role'|t }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assign Role Form -->
+        <div class="col-lg-6">
+            <div class="card bg-dark border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-plus me-2"></i>
+                        {{ 'assign_role'|t }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin_assign_role') }}">
+                        <div class="mb-3">
+                            <label for="player_nickname" class="form-label">{{ 'select_player'|t }}</label>
+                            <select class="form-select bg-secondary text-light border-0" 
+                                    id="player_nickname" name="player_id" required>
+                                <option value="">{{ 'select_player'|t }}</option>
+                                {% for player in players %}
+                                <option value="{{ player.id }}">{{ player.nickname }} ({{ player.level }} lvl)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="role_id" class="form-label">{{ 'select_role'|t }}</label>
+                            <select class="form-select bg-secondary text-light border-0" 
+                                    id="role_id" name="role_id" required>
+                                <option value="">{{ 'select_role'|t }}</option>
+                                {% for role in custom_roles %}
+                                <option value="{{ role.id }}" data-color="{{ role.color }}">
+                                    {% if role.emoji_url %}
+                                        <img src="{{ role.emoji_url }}" class="emoji-inline" alt="emoji">
+                                    {% elif role.emoji_class %}
+                                        <i class="{{ role.emoji_class }} me-1"></i>
+                                    {% elif role.emoji %}
+                                        {{ role.emoji }}
+                                    {% endif %}
+                                    {{ role.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check me-2"></i>{{ 'assign_role'|t }}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing Roles -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        {{ 'custom_roles'|t }}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>{{ 'role_name'|t }}</th>
+                                    <th>{{ 'emoji'|t }}</th>
+                                    <th>{{ 'color'|t }}</th>
+                                    <th>{{ 'players_with_role'|t }}</th>
+                                    <th>{{ 'visible'|t }}</th>
+                                    <th>{{ 'actions'|t }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for role in custom_roles %}
+                                <tr>
+                                    <td>
+                                        <span style="color: {{ role.color }}; {% if role.has_gradient %}background: linear-gradient(45deg, {{ role.color }}, {{ role.gradient_end_color }});{% endif %}">
+                                            {{ role.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if role.emoji_url %}
+                                            <img src="{{ role.emoji_url }}" class="emoji role-emoji" alt="custom emoji" loading="lazy">
+                                        {% elif role.emoji_class %}
+                                            <i class="{{ role.emoji_class }} role-emoji"></i>
+                                        {% elif role.emoji %}
+                                            <span class="role-emoji">{{ role.emoji }}</span>
+                                        {% else %}
+                                            <span class="text-muted">{{ 'no_emoji'|t }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ role.color }};">
+                                            {{ role.color }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ role.players_count or 0 }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if role.is_visible %}
+                                            <i class="fas fa-eye text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-eye-slash text-muted"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-warning btn-sm" 
+                                                    onclick="editRole({{ role.id }}, '{{ role.name }}', '{{ role.color }}', '{{ role.emoji or '' }}', '{{ role.emoji_class or '' }}', {{ role.is_visible }})">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                    onclick="deleteRole({{ role.id }}, '{{ role.name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        {{ 'no_custom_roles_created'|t }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player Roles Table -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-dark border-secondary">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        {{ 'players_with_custom_roles'|t }}
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th>{{ 'player'|t }}</th>
+                                    <th>{{ 'level'|t }}</th>
+                                    <th>{{ 'role'|t }}</th>
+                                    <th>{{ 'assigned_at'|t }}</th>
+                                    <th>{{ 'actions'|t }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for player_role in players_with_roles %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('player_profile', player_id=player_role.player.id) }}" 
+                                           class="text-decoration-none">
+                                            {{ player_role.player.nickname }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ player_role.player.level }}</span>
+                                    </td>
+                                    <td>
+                                        <span style="color: {{ player_role.role.color }}; {% if player_role.role.has_gradient %}background: linear-gradient(45deg, {{ player_role.role.color }}, {{ player_role.role.gradient_end_color }});{% endif %}">
+                                            {% if player_role.role.emoji_url %}
+                                                <img src="{{ player_role.role.emoji_url }}" class="emoji role-emoji" alt="custom emoji">
+                                            {% elif player_role.role.emoji_class %}
+                                                <i class="{{ player_role.role.emoji_class }}"></i>
+                                            {% elif player_role.role.emoji %}
+                                                {{ player_role.role.emoji }}
+                                            {% endif %}
+                                            {{ player_role.role.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">
+                                            {{ player_role.assigned_at.strftime('%d.%m.%Y %H:%M') }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                onclick="removePlayerRole({{ player_role.player.id }}, {{ player_role.role.id }}, '{{ player_role.player.nickname }}', '{{ player_role.role.name }}')">
+                                            <i class="fas fa-times me-1"></i>{{ 'remove'|t }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        {{ 'no_players_with_custom_roles'|t }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div class="modal fade" id="editRoleModal" tabindex="-1" aria-labelledby="editRoleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-warning">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editRoleModalLabel">{{ 'edit_role'|t }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editRoleForm" method="POST" action="">
+                    <input type="hidden" name="role_id" id="edit_role_id">
+                    <div class="mb-3">
+                        <label for="edit_role_name" class="form-label required">{{ 'role_name'|t }}</label>
+                        <input type="text" class="form-control bg-secondary text-light border-0" id="edit_role_name" name="role_name" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_role_color" class="form-label">{{ 'role_color'|t }}</label>
+                        <input type="color" class="form-control form-control-color bg-secondary border-0" id="edit_role_color" name="role_color">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_role_emoji" class="form-label">{{ 'role_emoji'|t }} (Text)</label>
+                        <input type="text" class="form-control bg-secondary text-light border-0" id="edit_role_emoji" name="role_emoji" maxlength="10">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_role_emoji_class" class="form-label">{{ 'role_emoji_class'|t }} (Font Awesome)</label>
+                        <input type="text" class="form-control bg-secondary text-light border-0" id="edit_role_emoji_class" name="role_emoji_class" placeholder="fas fa-crown">
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="edit_role_visible" name="role_visible">
+                        <label class="form-check-label" for="edit_role_visible">{{ 'visible_in_profile'|t }}</label>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">{{ 'save_changes'|t }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Role Confirmation Modal -->
+<div class="modal fade" id="deleteRoleConfirmModal" tabindex="-1" aria-labelledby="deleteRoleConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-danger">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteRoleConfirmModalLabel">{{ 'confirm_role_deletion'|t }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ 'are_you_sure_delete_role'|t }} <strong id="roleNameToDelete"></strong>?</p>
+                <p class="text-warning small">{{ 'this_action_cannot_be_undone'|t }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'cancel'|t }}</button>
+                <form id="deleteRoleFormModal" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">{{ 'delete_role'|t }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Remove Player Role Confirmation Modal -->
+<div class="modal fade" id="removePlayerRoleConfirmModal" tabindex="-1" aria-labelledby="removePlayerRoleConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-info">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removePlayerRoleConfirmModalLabel">{{ 'confirm_remove_player_role'|t }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ 'are_you_sure_remove_role'|t }} <strong id="removeRoleNameText"></strong> {{ 'from_player'|t }} <strong id="removePlayerNameText"></strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ 'cancel'|t }}</button>
+                <form id="removePlayerRoleFormModal" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-info">{{ 'remove_role'|t }}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Gradient toggle and preview
+document.addEventListener('DOMContentLoaded', function() {
+    const gradientCheckbox = document.getElementById('role_gradient');
+    const gradientSettings = document.getElementById('gradient_settings');
+    const gradientAnimated = document.getElementById('role_gradient_animated');
+    const colorPicker = document.getElementById('role_color');
+    const colorEndPicker = document.getElementById('role_gradient_end');
+    const gradientPreview = document.getElementById('gradient_preview');
+
+    function updateGradientPreview() {
+        if (!gradientPreview) return;
+        
+        const startColor = colorPicker.value;
+        const endColor = colorEndPicker.value;
+        const isGradient = gradientCheckbox.checked;
+        const isAnimated = gradientAnimated.checked;
+        
+        if (isGradient) {
+            const gradient = `linear-gradient(45deg, ${startColor}, ${endColor})`;
+            gradientPreview.style.background = gradient;
+            gradientPreview.style.backgroundSize = isAnimated ? '200% 200%' : '100% 100%';
+            gradientPreview.style.animation = isAnimated ? 'gradientShift 3s ease-in-out infinite' : 'none';
+            gradientPreview.style.webkitBackgroundClip = 'text';
+            gradientPreview.style.webkitTextFillColor = 'transparent';
+            gradientPreview.style.backgroundClip = 'text';
+        } else {
+            gradientPreview.style.background = 'none';
+            gradientPreview.style.color = startColor;
+            gradientPreview.style.animation = 'none';
+            gradientPreview.style.webkitTextFillColor = 'unset';
+        }
+    }
+
+    if (gradientCheckbox && gradientSettings) {
+        gradientCheckbox.addEventListener('change', function() {
+            gradientSettings.style.display = this.checked ? 'block' : 'none';
+            updateGradientPreview();
+        });
+    }
+
+    if (colorPicker) {
+        colorPicker.addEventListener('input', updateGradientPreview);
+    }
+
+    if (colorEndPicker) {
+        colorEndPicker.addEventListener('input', updateGradientPreview);
+    }
+
+    if (gradientAnimated) {
+        gradientAnimated.addEventListener('change', updateGradientPreview);
+    }
+
+    // Initial preview update
+    updateGradientPreview();
+});
+
+// Emoji preview function
+function previewEmoji(input) {
+    const preview = document.getElementById('emojiPreview');
+    const file = input.files[0];
+
+    if (file) {
+        const maxSize = file.name.toLowerCase().endsWith('.gif') ? 512 * 1024 : 200 * 1024;
+        const maxSizeText = file.name.toLowerCase().endsWith('.gif') ? '512KB' : '200KB';
+        const allowedTypes = ['image/png', 'image/svg+xml', 'image/webp', 'image/gif'];
+
+        if (file.size > maxSize) {
+            alert(`{{ 'file_too_large'|t }} ${maxSizeText}`);
+            input.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+            alert('{{ 'invalid_file_type'|t }} PNG, SVG, WEBP, GIF.');
+            input.value = '';
+            preview.style.display = 'none';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'inline-block';
+            preview.classList.add('emoji'); // Ensure correct styling
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Edit role function
+function editRole(roleId, roleName, roleColor, roleEmoji, roleEmojiClass, isVisible) {
+    document.getElementById('edit_role_id').value = roleId;
+    document.getElementById('edit_role_name').value = roleName;
+    document.getElementById('edit_role_color').value = roleColor;
+    document.getElementById('edit_role_emoji').value = roleEmoji || '';
+    document.getElementById('edit_role_emoji_class').value = roleEmojiClass || '';
+    document.getElementById('edit_role_visible').checked = isVisible;
+    
+    // Set form action dynamically
+    const editForm = document.getElementById('editRoleForm');
+    editForm.action = `{{ url_for('admin_edit_role', role_id=0) }}`.replace('0', roleId);
+
+    new bootstrap.Modal(document.getElementById('editRoleModal')).show();
+}
+
+// Delete role function (using modal)
+function deleteRole(roleId, roleName) {
+    document.getElementById('roleNameToDelete').textContent = roleName;
+    document.getElementById('deleteRoleFormModal').action = `{{ url_for('admin_delete_role', role_id=0) }}`.replace('0', roleId);
+    new bootstrap.Modal(document.getElementById('deleteRoleConfirmModal')).show();
+}
+
+// Remove player role function (using modal)
+function removePlayerRole(playerId, roleId, playerName, roleName) {
+    document.getElementById('removePlayerNameText').textContent = playerName;
+    document.getElementById('removeRoleNameText').textContent = roleName;
+    document.getElementById('removePlayerRoleFormModal').action = `{{ url_for('admin_remove_player_role', player_id=0) }}`.replace('0', playerId);
+    new bootstrap.Modal(document.getElementById('removePlayerRoleConfirmModal')).show();
+}
+</script>
+
+<style>
+.emoji {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    border-radius: 4px;
+    object-fit: contain;
+}
+
+.emoji-inline {
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.emoji-preview {
+    max-width: 100px;
+    max-height: 100px;
+    margin-top: 10px;
+    border: 2px solid var(--bs-primary);
+    border-radius: 5px;
+}
+
+.role-emoji {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+.form-control-color {
+    height: 38px; /* Adjust height to match other inputs */
+}
+
+.required::after {
+    content: " *";
+    color: red;
+}
+
+.gradient-preview-box {
+    width: 100%;
+    height: 60px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 193, 7, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-top: 10px;
+    background: #343a40;
+    color: #ffd700;
+    transition: all 0.3s ease;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Custom styles for dark theme modals */
+.modal-content.bg-dark {
+    background-color: #212529 !important;
+    border-color: #454d55;
+}
+.modal-header {
+    border-bottom: 1px solid #454d55;
+}
+.modal-footer {
+    border-top: 1px solid #454d55;
+}
+.modal-title {
+    color: #fff;
+}
+.btn-close {
+    filter: invert(1); /* Makes the close button white */
+}
+.form-control.bg-secondary.text-light.border-0 {
+    background-color: #343a40 !important;
+    color: #f8f9fa !important;
+    border: 1px solid #454d55 !important;
+}
+.form-select.bg-secondary.text-light.border-0 {
+    background-color: #343a40 !important;
+    color: #f8f9fa !important;
+    border: 1px solid #454d55 !important;
+}
+.form-select {
+    background-color: #343a40 !important;
+    color: #f8f9fa !important;
+    border: 1px solid #454d55 !important;
+}
+.form-control[type="color"] {
+    background-color: #343a40 !important;
+    border: 1px solid #454d55 !important;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+
+{% block title %}Таблица лидеров - Minecraft Bedwars{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="hero-section text-center py-5 mb-4">
+    <h1 class="display-4 fw-bold text-warning mb-3">
+        <i class="fas fa-trophy me-3"></i>Таблица лидеров
+    </h1>
+    <p class="lead text-muted">Лучшие игроки Minecraft Bedwars</p>
+
+    {% if stats %}
+        <div class="row g-3 mt-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_players }}</div>
+<div class="stat-label">Игроков</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ "{:,}".format(stats.total_kills) }}</div>
+                    <div class="stat-label">Киллов</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ "{:,}".format(stats.total_games) }}</div>
+                    <div class="stat-label">Игр</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-number">{{ stats.total_beds_broken }}</div>
+                    <div class="stat-label">Кроватей</div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="GET" class="search-form">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control bg-dark text-light border-secondary" 
+                           placeholder="Поиск по нику..." value="{{ search_query }}">
+                    <button class="btn btn-warning" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    {% if search_query %}
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        <div class="col-md-3">
+            <form method="GET" class="d-flex gap-2">
+                {% if search_query %}
+                <input type="hidden" name="search" value="{{ search_query }}">
+                {% endif %}
+                <select name="sort" class="form-select bg-dark text-light border-secondary" onchange="this.form.submit()">
+                    <option value="experience" {{ 'selected' if current_sort == 'experience' else '' }}>По опыту</option>
+                    <option value="level" {{ 'selected' if current_sort == 'level' else '' }}>По уровню</option>
+                    <option value="kills" {{ 'selected' if current_sort == 'kills' else '' }}>По киллам</option>
+                    <option value="final_kills" {{ 'selected' if current_sort == 'final_kills' else '' }}>По финальным киллам</option>
+                    <option value="beds_broken" {{ 'selected' if current_sort == 'beds_broken' else '' }}>По кроватям</option>
+                    <option value="wins" {{ 'selected' if current_sort == 'wins' else '' }}>По победам</option>
+                    <option value="kd_ratio" {{ 'selected' if current_sort == 'kd_ratio' else '' }}>По K/D</option>
+                    <option value="win_rate" {{ 'selected' if current_sort == 'win_rate' else '' }}>По проценту побед</option>
+                </select>
+                <select name="limit" class="form-select bg-dark text-light border-secondary" onchange="this.form.submit()">
+                    <option value="25" {{ 'selected' if limit == 25 else '' }}>25</option>
+                    <option value="50" {{ 'selected' if limit == 50 else '' }}>50</option>
+                    <option value="100" {{ 'selected' if limit == 100 else '' }}>100</option>
+                </select>
+            </form>
+        </div>
+        <div class="col-md-3">
+            <!-- View Toggle -->
+            <div class="view-toggle justify-content-end">
+                <button class="btn btn-outline-primary active" id="tableViewBtn" onclick="switchView('table')">
+                    <i class="fas fa-table me-1"></i>Таблица
+                </button>
+                <button class="btn btn-outline-primary" id="cardViewBtn" onclick="switchView('cards')">
+                    <i class="fas fa-th-large me-1"></i>Карточки
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- Table View -->
+    <div id="tableView" class="view-container">
+        <div class="card border-0 shadow-lg mb-5">
+            <div class="card-header bg-transparent border-0 py-4">
+                <h3 class="card-title text-center mb-0">
+                    <i class="fas fa-trophy text-warning me-2"></i>
+                    Таблица лидеров Bedwars
+                    {% if search_query %}
+                    <small class="text-muted d-block mt-2">Результаты поиска: "{{ search_query }}"</small>
+                    {% endif %}
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 leaderboard-table">
+                        <thead class="table-warning text-dark">
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Игрок</th>
+                                <th scope="col">Уровень</th>
+                                <th scope="col">Опыт</th>
+                                <th scope="col">K/D</th>
+                                <th scope="col">FK/D</th>
+                                <th scope="col">Кровати</th>
+                                <th scope="col">Игры</th>
+                                <th scope="col">Победы</th>
+                                <th scope="col">% Побед</th>
+                                <th scope="col">Рейтинг</th>
+                                <th scope="col">Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for player in players %}
+                            <tr class="player-row">
+                                <td class="rank-cell">
+                                    <span class="rank-number">#{{ loop.index }}</span>
+                                </td>
+                                <td class="player-name">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ player.minecraft_skin_url }}" 
+                                             alt="{{ player.nickname }}" 
+                                             class="player-avatar me-2 rounded-circle"
+                                             style="width: 32px; height: 32px; image-rendering: pixelated;">
+                                        <div>
+                                            <a href="{{ url_for('player_profile', player_id=player.id) }}" class="nickname fw-bold text-decoration-none">
+                                                {% if player.nickname_gradient %}
+                                                <span class="gradient-nickname" style="background: {{ player.nickname_gradient }}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; background-size: 200% 200%; {% if player.can_use_animated_gradients %}animation: gradientShift 3s ease-in-out infinite;{% endif %} font-weight: bold;">
+                                                    {{ player.nickname }}
+                                                </span>
+                                                {% else %}
+                                                <span class="text-warning hover-brighten">{{ player.nickname }}</span>
+                                                {% endif %}
+                                            </a>
+                                            <div class="role-info small mt-1">
+                                                {% set role_data = player.effective_role_data %}
+                                                {% if role_data.has_gradient %}
+                                                <span class="{{ role_data.type }}-role gradient-role" 
+                                                      style="background: {% if role_data.gradient %}{{ role_data.gradient }}{% else %}linear-gradient(45deg, {{ role_data.gradient_start }}, {{ role_data.gradient_end }}){% endif %}; 
+                                                             -webkit-background-clip: text; 
+                                                             -webkit-text-fill-color: transparent; 
+                                                             background-clip: text; 
+                                                             background-size: {% if role_data.gradient_animated %}200% 200%{% else %}100% 100%{% endif %}; 
+                                                             {% if role_data.gradient_animated %}animation: gradientShift 3s ease-in-out infinite;{% endif %} 
+                                                             font-weight: bold;" 
+                                                      data-fallback-color="{% if role_data.color %}{{ role_data.color }}{% else %}#ffc107{% endif %}">
+                                                    {% if role_data.emoji %}{{ role_data.emoji }} {% endif %}{{ role_data.name }}
+                                                </span>
+                                                {% elif role_data.color %}
+                                                <span class="{{ role_data.type }}-role" style="color: {{ role_data.color }}; font-weight: bold;">
+                                                    {% if role_data.emoji %}{{ role_data.emoji }} {% endif %}{{ role_data.name }}
+                                                </span>
+                                                {% else %}
+                                                <span class="{{ role_data.type }}-role text-muted" style="font-weight: bold;">
+                                                    {% if role_data.emoji %}{{ role_data.emoji }} {% endif %}{{ role_data.name }}
+                                                </span>
+                                                {% endif %}
+                                            </div>
+                                            {% if player.server_ip %}
+                                            <div class="server-info mt-1">
+                                                <small class="badge bg-secondary bg-opacity-50">
+                                                    <i class="fas fa-server me-1"></i>{{ player.server_ip }}
+                                                </small>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="level-cell">
+                                    <span class="level-badge">
+                                        Уровень {{ player.level }}
+                                    </span>
+                                    <div class="progress level-progress mt-1" style="height: 4px;">
+                                        <div class="progress-bar bg-warning" style="width: {{ player.level_progress }}%"></div>
+                                    </div>
+                                </td>
+                                <td class="experience-cell">
+                                    <span class="stat-value" data-stat="experience">{{ "{:,}".format(player.experience) }}</span>
+                                </td>
+                                <td class="kd-cell">
+                                    <span class="stat-value {{ 'text-success' if player.kd_ratio >= 1.5 else 'text-warning' if player.kd_ratio >= 1.0 else 'text-danger' }}">
+                                        {{ player.kd_ratio }}
+                                    </span>
+                                </td>
+                                <td class="fkd-cell">
+                                    <span class="stat-value {{ 'text-success' if player.fkd_ratio >= 1.5 else 'text-warning' if player.fkd_ratio >= 1.0 else 'text-danger' }}">
+                                        {{ player.fkd_ratio }}
+                                    </span>
+                                </td>
+                                <td class="beds-cell">
+                                    <span class="stat-value text-info">{{ player.beds_broken }}</span>
+                                </td>
+                                <td class="games-cell">
+                                    <span class="stat-value">{{ player.games_played }}</span>
+                                </td>
+                                <td class="wins-cell">
+                                    <span class="stat-value text-success">{{ player.wins }}</span>
+                                </td>
+                                <td class="winrate-cell">
+                                    <span class="stat-value winrate-color" data-win-rate="{{ player.win_rate }}">
+                                        {{ player.win_rate }}%
+                                    </span>
+                                </td>
+                                <td class="rating-cell">
+                                    <div class="star-rating">
+                                        {% for i in range(1, 6) %}
+                                            <i class="fas fa-star {{ 'text-warning' if i <= player.star_rating else 'text-muted' }}"></i>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('public_profile', player_id=player.id) }}" 
+                                           class="btn btn-sm btn-outline-primary" title="Публичный профиль">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if is_admin %}
+                                        <a href="{{ url_for('player_profile', player_id=player.id) }}" 
+                                           class="btn btn-sm btn-outline-warning" title="Админ-панель">
+                                            <i class="fas fa-user-cog"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card View -->
+    <div id="cardView" class="view-container d-none">
+        <div class="row">
+            {% for player in players %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="player-card">
+                    <div class="player-header">
+                        <img src="{{ player.minecraft_skin_url }}" 
+                             alt="{{ player.nickname }}" 
+                             class="player-avatar rounded-circle"
+                             style="image-rendering: pixelated;">
+                        <div class="player-info">
+                            <h5 class="mb-1">
+                                <a href="{{ url_for('player_profile', player_id=player.id) }}" class="text-decoration-none">
+                                    {% if player.nickname_gradient %}
+                                    <span class="gradient-nickname" style="background: {{ player.nickname_gradient }}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; background-size: 200% 200%; {% if player.can_use_animated_gradients %}animation: gradientShift 3s ease-in-out infinite;{% endif %} font-weight: bold;">
+                                        {{ player.nickname }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-warning hover-brighten">{{ player.nickname }}</span>
+                                    {% endif %}
+                                </a>
+                            </h5>
+                            <p class="mb-1">
+                                {% set role_data = player.effective_role_data %}
+                                {% if role_data.has_gradient %}
+                                <span class="{{ role_data.type }}-role" style="background: {% if role_data.gradient %}{{ role_data.gradient }}{% else %}linear-gradient(45deg, {{ role_data.gradient_start }}, {{ role_data.gradient_end }}){% endif %}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; {% if role_data.gradient_animated %}background-size: 200% 200%; animation: gradientShift 3s ease-in-out infinite;{% endif %} font-weight: bold;">
+                                    {% if role_data.emoji %}{{ role_data.emoji }} {% endif %}{{ role_data.name }}
+                                </span>
+                                {% elif role_data.color %}
+                                <span class="{{ role_data.type }}-role" style="color: {{ role_data.color }}; font-weight: bold;">
+                                    {% if role_data.emoji %}{{ role_data.emoji }} {% endif %}{{ role_data.name }}
+                                </span>
+                                {% else %}
+                                <span class="{{ role_data.type }}-role text-muted" style="font-weight: bold;">
+                                    {% if role_data.emoji %}{{ role_data.emoji }} {% endif %}{{ role_data.name }}
+                                </span>
+                                {% endif %}
+                            </p>
+                            <div class="level-info">
+                                <span class="badge bg-warning text-dark">Уровень {{ player.level }}</span>
+                                <div class="star-rating ms-2">
+                                    {% for i in range(1, 6) %}
+                                        <i class="fas fa-star {{ 'text-warning' if i <= player.star_rating else 'text-muted' }}"></i>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="player-actions">
+                            <div class="btn-group-vertical">
+                                <a href="{{ url_for('public_profile', player_id=player.id) }}" 
+                                   class="btn btn-sm btn-outline-primary" title="Публичный профиль">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if is_admin %}
+                                <a href="{{ url_for('player_profile', player_id=player.id) }}" 
+                                   class="btn btn-sm btn-outline-warning" title="Админ-панель">
+                                    <i class="fas fa-user-cog"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="player-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">{{ "{:,}".format(player.experience) }}</div>
+                            <div class="stat-label">Опыт</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value {{ 'text-success' if player.kd_ratio >= 1.5 else 'text-warning' if player.kd_ratio >= 1.0 else 'text-danger' }}">
+                                {{ player.kd_ratio }}
+                            </div>
+                            <div class="stat-label">K/D</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value text-info">{{ player.beds_broken }}</div>
+                            <div class="stat-label">Кровати</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value text-success">{{ player.wins }}</div>
+                            <div class="stat-label">Победы</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value {{ 'text-success' if player.win_rate >= 70 else 'text-warning' if player.win_rate >= 50 else 'text-danger' }}">
+                                {{ player.win_rate }}%
+                            </div>
+                            <div class="stat-label">% Побед</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if not players %}
+    <div class="empty-state text-center py-5">
+        <i class="fas fa-users text-muted display-1"></i>
+        <h3 class="mt-3 text-muted">
+            {% if search_query %}
+                Игроки не найдены
+            {% else %}
+                Таблица лидеров пуста
+            {% endif %}
+        </h3>
+        <p class="text-muted">
+            {% if search_query %}
+                Попробуйте изменить поисковый запрос
+            {% else %}
+                Добавьте первого игрока, чтобы начать
+            {% endif %}
+        </p>
+        {% if is_admin and not search_query %}
+            <a href="{{ url_for('admin') }}" class="btn btn-warning mt-3">
+                <i class="fas fa-plus me-2"></i>Добавить игрока
+            </a>
+        {% endif %}
+        {% if search_query %}
+            <a href="{{ url_for('index') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-list me-2"></i>Показать всех
+            </a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function changeSorting() {
+    const select = document.getElementById('sortSelect');
+    const url = new URL(window.location);
+    url.searchParams.set('sort', select.value);
+    window.location.href = url.toString();
+}
+
+// Filtering logic
+// document.getElementById('levelFilter').addEventListener('change', filterPlayers); // These filters are not present in the current view
+// document.getElementById('roleFilter').addEventListener('change', filterPlayers);
+// document.getElementById('searchInput').addEventListener('input', filterPlayers);
+// document.getElementById('sortSelect').addEventListener('change', filterPlayers); // Re-filter on sort change
+
+function filterPlayers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const currentView = document.querySelector('.view-container:not(.d-none)').id;
+    const rows = document.querySelectorAll(`#${currentView} .player-row, #${currentView} .player-card`);
+
+    rows.forEach(row => {
+        const playerName = row.querySelector('.player-name a, .player-info a').textContent.toLowerCase();
+        const playerNickname = row.querySelector('.player-name a, .player-info a').textContent.toLowerCase();
+
+        const searchMatch = playerNickname.includes(searchTerm);
+
+        if (searchMatch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Function to switch between table and card views
+function switchView(viewType) {
+    document.getElementById('tableViewBtn').classList.toggle('active', viewType === 'table');
+    document.getElementById('cardViewBtn').classList.toggle('active', viewType === 'cards');
+
+    document.getElementById('tableView').classList.toggle('d-none', viewType !== 'table');
+    document.getElementById('cardView').classList.toggle('d-none', viewType !== 'cards');
+}
+
+// Initial filter on page load to apply any pre-selected filters (e.g., from URL parameters)
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialSearch = urlParams.get('search') || '';
+    const initialSort = urlParams.get('sort') || 'experience';
+    const initialLimit = urlParams.get('limit') || '25';
+
+    document.getElementById('searchInput').value = initialSearch;
+    document.getElementById('sortSelect').value = initialSort;
+    document.querySelector(`select[name="limit"] option[value="${initialLimit}"]`).selected = true;
+
+    filterPlayers(); // Apply initial filters
+
+    // Check URL for initial view preference, default to table
+    const initialView = urlParams.get('view') || 'table';
+    switchView(initialView);
+});
+
+
+{% if is_admin %}
+function confirmDelete(playerId, playerName) {
+    document.getElementById('deletePlayerName').textContent = playerName;
+    document.getElementById('deleteForm').action = '{{ url_for("delete_player", player_id=0) }}'.replace('0', playerId);
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+{% endif %}
+
+// Add hover effects to table rows
+document.querySelectorAll('.player-row').forEach(row => {
+    row.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateX(5px)';
+        this.style.transition = 'transform 0.2s ease';
+    });
+
+    row.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateX(0)';
+    });
+});
+
+// Animate rank badges
+document.querySelectorAll('.rank-badge').forEach((badge, index) => {
+    setTimeout(() => {
+        badge.style.animation = 'bounceIn 0.6s ease';
+    }, index * 50);
+});
+
+// CSS keyframes for gradient animation
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = `
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.hover-brighten:hover {
+    filter: brightness(1.2);
+    transition: filter 0.2s ease-in-out;
+}
+.player-card .player-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.player-card .player-avatar {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+.player-card .player-info {
+    flex-grow: 1;
+}
+.player-card .level-info {
+    display: flex;
+    align-items: center;
+    margin-top: 5px;
+}
+.player-card .star-rating {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+.player-card .player-actions {
+    margin-left: auto; /* Push actions to the right */
+}
+.player-card .player-actions .btn-group-vertical {
+    gap: 5px; /* Spacing between buttons */
+}
+.player-card .player-stats {
+    display: flex;
+    justify-content: space-between;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.player-card .stat-item {
+    text-align: center;
+}
+.player-card .stat-value {
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+}
+.player-card .stat-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+/* Responsive adjustments for cards */
+@media (max-width: 768px) {
+    .player-card .player-header {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    .player-card .player-info {
+        text-align: center;
+    }
+    .player-card .player-actions {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    .player-card .player-stats {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    .player-card .stat-item {
+        flex: 1 1 45%; /* Two stats per row on smaller screens */
+    }
+}
+`;
+document.head.appendChild(styleSheet);
+
+</script>
+{% endblock %}

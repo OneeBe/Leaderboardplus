@@ -1,0 +1,315 @@
+
+{% extends "base.html" %}
+
+{% block title %}Инвентарь - {{ current_player.nickname }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="page-title">
+            <i class="fas fa-box text-warning me-2"></i>Инвентарь
+        </h2>
+        <a href="{{ url_for('my_profile') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Назад к профилю
+        </a>
+    </div>
+
+    {% if not current_player %}
+    <div class="text-center py-5">
+        <i class="fas fa-user-lock fa-3x text-muted mb-3"></i>
+        <h4>Необходима авторизация</h4>
+        <p class="text-muted">Войдите в свой аккаунт для просмотра инвентаря</p>
+        <a href="{{ url_for('player_login') }}" class="btn btn-primary">
+            <i class="fas fa-sign-in-alt me-2"></i>Войти
+        </a>
+    </div>
+    {% else %}
+
+    {% set inventory = current_player.get_inventory() %}
+    
+    <div class="inventory-grid">
+        <!-- Weapons Section -->
+        {% if inventory.get('weapons') %}
+        <div class="inventory-section mb-4">
+            <div class="card border-0" style="background: var(--bg-secondary);">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="text-danger mb-0">
+                        <i class="fas fa-sword me-2"></i>Оружие
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for item_id, quantity in inventory['weapons'].items() %}
+                        <div class="col-md-4">
+                            <div class="inventory-item">
+                                <div class="item-icon">
+                                    <i class="fas fa-sword"></i>
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">{{ item_id|title }}</div>
+                                    <div class="item-quantity">x{{ quantity }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Armor Section -->
+        {% if inventory.get('armor') %}
+        <div class="inventory-section mb-4">
+            <div class="card border-0" style="background: var(--bg-secondary);">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="text-info mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>Броня
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for item_id, quantity in inventory['armor'].items() %}
+                        <div class="col-md-4">
+                            <div class="inventory-item">
+                                <div class="item-icon">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">{{ item_id|title }}</div>
+                                    <div class="item-quantity">x{{ quantity }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Resources Section -->
+        {% if inventory.get('resources') %}
+        <div class="inventory-section mb-4">
+            <div class="card border-0" style="background: var(--bg-secondary);">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="text-warning mb-0">
+                        <i class="fas fa-gem me-2"></i>Ресурсы
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for item_id, quantity in inventory['resources'].items() %}
+                        <div class="col-md-3">
+                            <div class="inventory-item">
+                                <div class="item-icon">
+                                    {% if item_id == 'iron' %}
+                                        <i class="fas fa-cube text-secondary"></i>
+                                    {% elif item_id == 'gold' %}
+                                        <i class="fas fa-cube text-warning"></i>
+                                    {% elif item_id == 'diamond' %}
+                                        <i class="fas fa-gem text-info"></i>
+                                    {% elif item_id == 'emerald' %}
+                                        <i class="fas fa-gem text-success"></i>
+                                    {% else %}
+                                        <i class="fas fa-cube"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">{{ item_id|title }}</div>
+                                    <div class="item-quantity">x{{ quantity }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Tools Section -->
+        {% if inventory.get('tools') %}
+        <div class="inventory-section mb-4">
+            <div class="card border-0" style="background: var(--bg-secondary);">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="text-success mb-0">
+                        <i class="fas fa-tools me-2"></i>Инструменты
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for item_id, quantity in inventory['tools'].items() %}
+                        <div class="col-md-4">
+                            <div class="inventory-item">
+                                <div class="item-icon">
+                                    {% if 'pickaxe' in item_id %}
+                                        <i class="fas fa-hammer"></i>
+                                    {% elif 'axe' in item_id %}
+                                        <i class="fas fa-tools"></i>
+                                    {% elif 'shear' in item_id %}
+                                        <i class="fas fa-cut"></i>
+                                    {% else %}
+                                        <i class="fas fa-tools"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">{{ item_id|title }}</div>
+                                    <div class="item-quantity">x{{ quantity }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Special Items Section -->
+        {% if inventory.get('special') %}
+        <div class="inventory-section mb-4">
+            <div class="card border-0" style="background: var(--bg-secondary);">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="text-purple mb-0">
+                        <i class="fas fa-magic me-2"></i>Особые предметы
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for item_id, quantity in inventory['special'].items() %}
+                        <div class="col-md-4">
+                            <div class="inventory-item special-item">
+                                <div class="item-icon">
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <div class="item-info">
+                                    <div class="item-name">{{ item_id|title }}</div>
+                                    <div class="item-quantity">x{{ quantity }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empty Inventory -->
+        {% if not inventory %}
+        <div class="text-center py-5">
+            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+            <h4>Инвентарь пуст</h4>
+            <p class="text-muted">Играйте в игры и выполняйте квесты, чтобы получить предметы!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Inventory Stats -->
+    <div class="inventory-stats mt-4">
+        <div class="card border-0" style="background: var(--bg-secondary);">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-2 text-info"></i>Статистика инвентаря
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <div class="stat-number text-warning">{{ inventory|length }}</div>
+                            <div class="stat-label">Категорий</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <div class="stat-number text-success">
+                                {% set total_items = [] %}
+                                {% for category, items in inventory.items() %}
+                                    {% for item, quantity in items.items() %}
+                                        {% if total_items.append(quantity) %}{% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ total_items|sum if total_items else 0 }}
+                            </div>
+                            <div class="stat-label">Всего предметов</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <div class="stat-number text-info">
+                                {% set unique_items = [] %}
+                                {% for category, items in inventory.items() %}
+                                    {% for item in items.keys() %}
+                                        {% if unique_items.append(item) %}{% endif %}
+                                    {% endfor %}
+                                {% endfor %}
+                                {{ unique_items|length if unique_items else 0 }}
+                            </div>
+                            <div class="stat-label">Уникальных</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card text-center">
+                            <div class="stat-number text-purple">
+                                {{ inventory.get('special', {})|length }}
+                            </div>
+                            <div class="stat-label">Особых</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.inventory-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.inventory-item:hover {
+    transform: translateY(-3px);
+    border-color: var(--warning-color);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.inventory-item.special-item {
+    background: linear-gradient(135deg, rgba(147, 51, 234, 0.2), rgba(236, 72, 153, 0.2));
+    border-color: #9333ea;
+}
+
+.item-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.item-name {
+    font-weight: bold;
+    color: #ffffff;
+    margin-bottom: 5px;
+}
+
+.item-quantity {
+    color: var(--warning-color);
+    font-weight: 500;
+}
+
+.text-purple {
+    color: #9333ea !important;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+}
+</style>
+{% endblock %}
